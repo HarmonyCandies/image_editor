@@ -1,0 +1,17 @@
+{
+  "license": "Apache-2.0",
+  "devDependencies": {},
+  "keywords": [
+    "imageeditor",
+    "image",
+    "editor"
+  ],
+  "author": "zmtzawqlp",
+  "name": "@candies/image_editor",
+  "description": "Arkts plugin, Support crop, flip, rotate, mix image, add text. merge multi images.",
+  "main": "Index.ets",
+  "repository": "https://github.com/HarmonyCandies/image_editor",
+  "version": "1.0.1",
+  "homepage": "https://github.com/HarmonyCandies/image_editor",
+  "dependencies": {}
+}
