@@ -2,7 +2,7 @@ import image from '@ohos.multimedia.image';
 import { MapUtils } from '../util/MapUtils';
 import { EditOption } from './Option';
 import { common2D, drawing } from '@kit.ArkGraphics2D';
-import { Offset } from '../mode/Offset';
+import { Offset } from '@kit.ArkUI';
 
 export class DrawOption implements EditOption {
   static readonly key: string = 'draw';
@@ -354,7 +354,8 @@ class BezierPathPart extends PathPart {
   control1: Offset;
   control2: Offset | null;
   target: Offset;
- // kind: number;
+
+  // kind: number;
 
   constructor(control1: Offset, control2: Offset | null, target: Offset) {
     super();

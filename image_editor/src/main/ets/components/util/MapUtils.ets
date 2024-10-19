@@ -1,6 +1,5 @@
 import { common2D } from '@kit.ArkGraphics2D';
-import { Offset } from '../mode/Offset';
-
+import { Offset } from '@kit.ArkUI';
 
 export class MapUtils {
   static get<T>(map: Map<string, ESObject>, key: string, defaultValue: T): T {
@@ -34,6 +33,9 @@ export class MapUtils {
   }
 
   static getOffset(map: Map<string, ESObject>): Offset {
-    return new Offset(map);
+    return {
+      x: MapUtils.get<number>(map, 'x', 0),
+      y: MapUtils.get<number>(map, 'y', 0),
+    };
   }
 }

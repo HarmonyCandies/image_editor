@@ -97,8 +97,8 @@ ImageMergeOption(image: PixelMap, offset: Offset, width: number, height: number)
 
 ```typescript
 let images: Array<ImageMergeOption> = [];
-images.push(new ImageMergeOption(image, new Offset(0, 0), 50, 50));
-images.push(new ImageMergeOption(image1, new Offset(25, 25), 20, 20));
+images.push(new ImageMergeOption(image, {x: 0, y: 0}, 50, 50));
+images.push(new ImageMergeOption(image1, { x: 25, y: 25}, 20, 20));
 let pixelMap = await ImageEditor.instance.mergeImage(this.rfd!, [new mergeImage(100,100,images)]);
 ```
 
@@ -119,7 +119,7 @@ draws.push(new LineDrawPart(new DrawPaint({
   red: 255,
   green: 0,
   blue: 0,
-}, 1 , false),new Offset(25, 25),new Offset(25, 25),));
+}, 1 , false),{ x: 25, y: 25},{ x: 25, y: 25},));
 
 // PointDrawPart(paint: DrawPaint, offsets: Array<Offset>)
 draws.push(new PointDrawPart(new DrawPaint({
@@ -127,7 +127,7 @@ draws.push(new PointDrawPart(new DrawPaint({
   red: 255,
   green: 0,
   blue: 0,
-}, 1 , false),[new Offset(25, 25),new Offset(25, 25)]));
+}, 1 , false),[{ x: 25, y: 25},{ x: 25, y: 25}]));
 
 // RectDrawPart(paint: DrawPaint, rect: common2D.Rect)
 draws.push(new RectDrawPart(new DrawPaint({
@@ -159,11 +159,11 @@ draws.push(new OvalDrawPart(new DrawPaint({
 
 let pathParts: Array<PathPart> = [];
 // MovePathPart(offset: Offset)
-pathParts.push(new MovePathPart( new Offset(25, 25)));
+pathParts.push(new MovePathPart( { x: 25, y: 25}));
 // LineToPathPart(offset: Offset)
-pathParts.push(new LineToPathPart( new Offset(25, 25)));
+pathParts.push(new LineToPathPart( { x: 25, y: 25}));
 // BezierPathPart(control1: Offset, control2: Offset | null, target: Offset)
-pathParts.push(new BezierPathPart( new Offset(25, 25),new Offset(50, 10),new Offset(11, 15)));
+pathParts.push(new BezierPathPart( { x: 25, y: 25},{x: 50, y: 10},{x: 27, y: 5}));
 // ArcToPathPart(rect: common2D.Rect, startAngle: number, sweepAngle: number, useCenter: boolean)
 pathParts.push(new BezierPathPart( {
   left: 25,
