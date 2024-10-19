@@ -17,12 +17,15 @@ import { common2D, drawing } from '@kit.ArkGraphics2D';
 @Entry
 @Component
 struct Index {
-  pixelMap: PixelMap | undefined = undefined;
-  options: Array<EditOption> = [];
-  private settings: RenderingContextSettings = new RenderingContextSettings(true)
-  private context: CanvasRenderingContext2D = new CanvasRenderingContext2D(this.settings)
-  @State private rfd: resourceManager.RawFileDescriptor | undefined = undefined;
+  pixelMap: PixelMap | null = null;
+  private rfd: resourceManager.RawFileDescriptor | undefined = undefined;
   private imageInfo: image.ImageInfo | undefined = undefined;
+  dialogController: CustomDialogController | null = null;
+
+  // 在自定义组件即将析构销毁时将dialogController置空
+  aboutToDisappear() {
+    this.dialogController = null // 将dialogController置空
+  }
 
   aboutToAppear() {
     this.init();
@@ -34,38 +37,50 @@ struct Index {
     // 获取resourceManager资源管理器
     const resourceMgr: resourceManager.ResourceManager = context.resourceManager;
     let rfd = await resourceMgr.getRawFd('image.jpg');
-    this.pixelMap = await ImageEditor.instance.handleImageRawfile(rfd, this.options);
+    const imageSource: image.ImageSource = image.createImageSource(rfd);
+
+    let decodingOptions: image.DecodingOptions = {
+      sampleSize: 1,
+      editable: true,
+    };
+    this.pixelMap = await imageSource.createPixelMap(decodingOptions);
     this.imageInfo = await this.pixelMap!.getImageInfo();
     this.rfd = rfd;
   }
 
-  async update(option: EditOption): Promise<void> {
-    if (this.pixelMap != undefined) {
-      this.pixelMap.release();
-    }
+  async showNewImage(option: EditOption): Promise<void> {
     if (this.rfd == undefined) {
       return;
     }
-    this.options = [];
-    this.options.push(option);
-
-    this.pixelMap = await ImageEditor.instance.handleImageRawfile(this.rfd!, this.options);
-    this.imageInfo = await this.pixelMap!.getImageInfo();
-    let outputSize: Size = {
-      width: this.context.width,
-      height: this.context.height,
+    if (this.pixelMap != undefined) {
+      this.pixelMap.release();
     }
-    let inputSize: Size = this.imageInfo!.size;
-    let fittedSizes = applyBoxFit(BoxFit.contain, inputSize, outputSize)
-    let sourceSize = fittedSizes.source;
-    let destinationSize = fittedSizes.destination;
-    const halfWidthDelta = (outputSize.width - destinationSize.width) / 2.0;
-    const halfHeightDelta = (outputSize.height - destinationSize.height) / 2.0;
 
-    const dx = halfWidthDelta;
-    const dy = halfHeightDelta;
-    this.context.reset();
-    this.context.drawImage(this.pixelMap, dx, dy, destinationSize.width, destinationSize.height,);
+
+    this.pixelMap = await ImageEditor.instance.handleImageRawfile(this.rfd!, [option]);
+
+    this.dialogController = new CustomDialogController({
+      builder: ImageDialog({
+        pixelMap: this.pixelMap,
+      }),
+      autoCancel: true,
+      onWillDismiss: (dismissDialogAction: DismissDialogAction) => {
+        if (this.pixelMap != null) {
+          this.pixelMap.release();
+        }
+      },
+      alignment: DialogAlignment.Center,
+      offset: { dx: 0, dy: -20 },
+      customStyle: false,
+      cornerRadius: 20,
+      width: 300,
+      // height: 500,
+      borderWidth: 1,
+      borderStyle: BorderStyle.Dashed, //使用borderStyle属性，需要和borderWidth属性一起使用
+      borderColor: Color.Blue, //使用borderColor属性，需要和borderWidth属性一起使用
+      backgroundColor: Color.White,
+    });
+    this.dialogController.open();
   }
 
   build() {
@@ -74,61 +89,49 @@ struct Index {
         Button('Scale', { type: ButtonType.Normal, stateEffect: true }).onClick(() => {
           let width = this.imageInfo!.size.width;
           let height = this.imageInfo!.size.height;
-          this.update(new ScaleOption(width / 2, height / 2, true, true));
-        })
+          this.showNewImage(new ScaleOption(width / 4, height, false, true));
+        }).margin(5)
         Button('Flip', { type: ButtonType.Normal, stateEffect: true }).onClick(() => {
 
-          this.update(new FlipOption(true, true));
-        })
+          this.showNewImage(new FlipOption(true, true));
+        }).margin(5)
         Button('Rotate', { type: ButtonType.Normal, stateEffect: true }).onClick(() => {
-
-          this.update(new RotateOption(65));
-        })
+          this.showNewImage(new RotateOption(65));
+        }).margin(5)
+      }
+      Row() {
         Button('Clip', { type: ButtonType.Normal, stateEffect: true }).onClick(() => {
           let width = this.imageInfo!.size.width;
           let height = this.imageInfo!.size.height;
-          this.update(new ClipOption((width - width / 2) / 2, (height - height / 2) / 2, width / 2, height / 2));
-        })
+          this.showNewImage(new ClipOption((width - width / 2) / 2, (height - height / 2) / 2, width / 2, height / 2));
+        }).margin(5)
         Button('AddText', { type: ButtonType.Normal, stateEffect: true }).onClick(() => {
           let texts: Array<EditorText> = [];
           let width = this.imageInfo!.size.width;
           let height = this.imageInfo!.size.height;
-          texts.push(new EditorText("AddText", "", width / 2, height / 2, 54, {
+          texts.push(new EditorText("AddText", width / 2, height / 2, vp2px(18), {
             alpha: 255,
             red: 255,
             green: 0,
             blue: 0,
           }))
-          this.update(new AddTextOption(texts));
-        }).fontSize(18)
+          this.showNewImage(new AddTextOption(texts));
+        }).margin(5)
       }
 
+      Image($rawfile("image.jpg")).objectFit(ImageFit.Contain)
 
-      if (this.rfd != undefined) {
-        Canvas(this.context)
-          .width('100%')
-          .height('100%')// .backgroundColor('#ffff00')
-          .onReady(() => {
-            if (this.pixelMap != undefined) {
 
-              let outputSize: Size = {
-                width: this.context.width,
-                height: this.context.height,
-              }
-              let inputSize: Size = this.imageInfo!.size;
-              let fittedSizes = applyBoxFit(BoxFit.contain, inputSize, outputSize)
-              let sourceSize = fittedSizes.source;
-              let destinationSize = fittedSizes.destination;
-              const halfWidthDelta = (outputSize.width - destinationSize.width) / 2.0;
-              const halfHeightDelta = (outputSize.height - destinationSize.height) / 2.0;
-
-              const dx = halfWidthDelta;
-              const dy = halfHeightDelta;
-
-              this.context.drawImage(this.pixelMap, dx, dy, destinationSize.width, destinationSize.height,);
-            }
-          })
-      }
+      // if (this.rfd != undefined) {
+      //   Canvas(this.context)
+      //     .width('100%')
+      //     .height('100%')// .backgroundColor('#ffff00')
+      //     .onReady(() => {
+      //       if (this.pixelMap != undefined) {
+      //         this.draw();
+      //       }
+      //     })
+      // }
     }
     .width('100%')
     .height('100%')
@@ -136,97 +139,27 @@ struct Index {
 }
 
 
-enum BoxFit {
-  fill,
-  contain,
-  cover,
-  fitWidth,
-  fitHeight,
-  none,
-  scaleDown
-}
+@CustomDialog
+@Component
+struct ImageDialog {
+  pixelMap: PixelMap | null = null;
+  controller?: CustomDialogController
 
-function applyBoxFit(fit: BoxFit, inputSize: Size, outputSize: Size): FittedSizes {
-  if (inputSize.height <= 0.0 || inputSize.width <= 0.0 || outputSize.height <= 0.0 || outputSize.width <= 0.0) {
-    return new FittedSizes({ width: 0, height: 0 }, { width: 0, height: 0 });
-  }
-
-  let sourceSize: Size;
-  let destinationSize: Size;
-
-  switch (fit) {
-    case BoxFit.fill:
-      sourceSize = inputSize;
-      destinationSize = outputSize;
-      break;
-    case BoxFit.contain:
-      sourceSize = inputSize;
-      if (outputSize.width / outputSize.height > sourceSize.width / sourceSize.height) {
-        destinationSize =
-          { width: sourceSize.width * outputSize.height / sourceSize.height, height: outputSize.height };
-      } else {
-        destinationSize = { width: outputSize.width, height: sourceSize.height * outputSize.width / sourceSize.width };
+  build() {
+    Column() {
+      Button('关闭')
+        .onClick(() => {
+          if (this.controller != undefined) {
+            this.controller.close()
+          }
+        }).backgroundColor(0xffffff).fontColor(Color.Black)
+      if (this.pixelMap != null) {
+        Image(this.pixelMap).objectFit(ImageFit.Contain)
       }
-      break;
-    case BoxFit.cover:
-      if (outputSize.width / outputSize.height > inputSize.width / inputSize.height) {
-        sourceSize = { width: inputSize.width, height: inputSize.width * outputSize.height / outputSize.width };
-      } else {
-        sourceSize = { width: inputSize.height * outputSize.width / outputSize.height, height: inputSize.height };
-      }
-      destinationSize = outputSize;
-      break;
-    case BoxFit.fitWidth:
-      if (outputSize.width / outputSize.height > inputSize.width / inputSize.height) {
-        // Like "cover"
-        sourceSize = { width: inputSize.width, height: inputSize.width * outputSize.height / outputSize.width };
-        destinationSize = outputSize;
-      } else {
-        // Like "contain"
-        sourceSize = inputSize;
-        destinationSize = { width: outputSize.width, height: sourceSize.height * outputSize.width / sourceSize.width };
-      }
-      break;
-    case BoxFit.fitHeight:
-      if (outputSize.width / outputSize.height > inputSize.width / inputSize.height) {
-        // Like "contain"
-        sourceSize = inputSize;
-        destinationSize =
-          { width: sourceSize.width * outputSize.height / sourceSize.height, height: outputSize.height };
-      } else {
-        // Like "cover"
-        sourceSize = { width: inputSize.height * outputSize.width / outputSize.height, height: inputSize.height };
-        destinationSize = outputSize;
-      }
-      break;
-    case BoxFit.none:
-      sourceSize =
-        { width: Math.min(inputSize.width, outputSize.width), height: Math.min(inputSize.height, outputSize.height) };
-      destinationSize = sourceSize;
-      break;
-    case BoxFit.scaleDown:
-      sourceSize = inputSize;
-      destinationSize = inputSize;
-      const aspectRatio = inputSize.width / inputSize.height;
-      if (destinationSize.height > outputSize.height) {
-        destinationSize = { width: outputSize.height * aspectRatio, height: outputSize.height };
-      }
-      if (destinationSize.width > outputSize.width) {
-        destinationSize = { width: outputSize.width, height: outputSize.width / aspectRatio };
-      }
-      break;
-  }
-
-  return new FittedSizes(sourceSize, destinationSize);
-}
-
-
-class FittedSizes {
-  source: Size;
-  destination: Size;
-
-  constructor(source: Size, destination: Size) {
-    this.source = source;
-    this.destination = destination;
+    }
+    .borderRadius
+    (10
+    )
   }
 }
+

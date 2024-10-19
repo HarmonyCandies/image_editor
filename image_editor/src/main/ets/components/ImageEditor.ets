@@ -104,9 +104,8 @@ export class ImageEditor {
     return pixelMap;
   }
 
-
-  async mergeImage(packOptions: image.PackingOption, width: number, height: number,
-    images: Array<ImageMergeOption>,): Promise<Uint8Array> {
+  async mergeImage(width: number, height: number,
+    images: Array<ImageMergeOption>,): Promise<PixelMap> {
 
     const context = new OffscreenCanvasRenderingContext2D(width, height, {
       antialias: true,
@@ -120,28 +119,50 @@ export class ImageEditor {
       await imageMergeOption.handle(context);
     }
 
-    const imagePackerApi = image.createImagePacker();
-
-    // PixelMap编码成不同格式的存档图片
-    // let format: string = 'image/jpeg';
-    // switch (fmt.format) {
-    //   case 0:
-    //     format = 'image/png'
-    //     break;
-    //   default:
-    //     break;
-    // }
-    //
-    // const packOptions: image.PackingOption = {
-    //   format: format,
-    //   quality: fmt.quality,
-    // }
     let pixelMap = context.getPixelMap(0, 0, width, height);
 
     let scale = px2vp(1);
     await pixelMap.scale(scale, scale);
-    let uint8Array: Uint8Array = new Uint8Array(await imagePackerApi.packing(pixelMap, packOptions));
-    pixelMap.release();
-    return uint8Array;
+
+    return pixelMap;
   }
+  // async mergeImage(packOptions: image.PackingOption, width: number, height: number,
+  //   images: Array<ImageMergeOption>,): Promise<Uint8Array> {
+  //
+  //   const context = new OffscreenCanvasRenderingContext2D(width, height, {
+  //     antialias: true,
+  //   });
+  //
+  //   // 'src': image.toJson(), => 'memory'
+  //   // 'position': position.toJson(),
+  //
+  //   for (let index = 0; index < images.length; index++) {
+  //     const imageMergeOption: ImageMergeOption = images[index];
+  //     await imageMergeOption.handle(context);
+  //   }
+  //
+  //   const imagePackerApi = image.createImagePacker();
+  //
+  //   // PixelMap编码成不同格式的存档图片
+  //   // let format: string = 'image/jpeg';
+  //   // switch (fmt.format) {
+  //   //   case 0:
+  //   //     format = 'image/png'
+  //   //     break;
+  //   //   default:
+  //   //     break;
+  //   // }
+  //   //
+  //   // const packOptions: image.PackingOption = {
+  //   //   format: format,
+  //   //   quality: fmt.quality,
+  //   // }
+  //   let pixelMap = context.getPixelMap(0, 0, width, height);
+  //
+  //   let scale = px2vp(1);
+  //   await pixelMap.scale(scale, scale);
+  //   let uint8Array: Uint8Array = new Uint8Array(await imagePackerApi.packing(pixelMap, packOptions));
+  //   pixelMap.release();
+  //   return uint8Array;
+  // }
 }

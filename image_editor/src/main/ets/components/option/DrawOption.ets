@@ -6,20 +6,20 @@ import { Offset } from '../mode/Offset';
 
 export class DrawOption implements EditOption {
   static readonly key: string = 'draw';
-  draws: Array<_DrawPart>;
+  draws: Array<DrawPart>;
 
-  constructor(draws: Array<_DrawPart>) {
+  constructor(draws: Array<DrawPart>) {
     this.draws = draws;
   }
 
   static fromMap(data: Map<string, ESObject>): DrawOption {
     let list: Array<Map<string, ESObject>> = MapUtils.get(data, 'parts', []);
-    const draws: Array<_DrawPart> = [];
+    const draws: Array<DrawPart> = [];
     for (let index = 0; index < list.length; index++) {
       const element: Map<string, ESObject> = list[index];
       let key: string = element.get('key');
       let value: Map<string, ESObject> = MapUtils.getMap(element, 'value');
-      let drawPart: _DrawPart | null = null;
+      let drawPart: DrawPart | null = null;
       switch (key) {
         case LineDrawPart.key:
           drawPart = LineDrawPart.fromMap(value);
@@ -59,7 +59,7 @@ export class DrawOption implements EditOption {
   }
 }
 
-interface _DrawPart {
+interface DrawPart {
   handle(canvas: drawing.Canvas): void;
 
   canIgnore(): boolean;
@@ -86,7 +86,7 @@ export class DrawPaint {
   }
 }
 
-export class LineDrawPart implements _DrawPart {
+export class LineDrawPart implements DrawPart {
   static readonly key: string = 'line';
   start: Offset;
   end: Offset;
@@ -120,7 +120,7 @@ export class LineDrawPart implements _DrawPart {
 }
 
 // 类似地为其他类添加 fromMap 方法
-export class PointDrawPart implements _DrawPart {
+export class PointDrawPart implements DrawPart {
   static readonly key: string = 'point';
   offsets: Array<Offset>;
   paint: DrawPaint;
@@ -159,7 +159,7 @@ export class PointDrawPart implements _DrawPart {
   }
 }
 
-export class RectDrawPart implements _DrawPart {
+export class RectDrawPart implements DrawPart {
   static readonly key: string = 'rect';
   rect: common2D.Rect;
   paint: DrawPaint;
@@ -227,13 +227,13 @@ export class OvalDrawPart extends RectDrawPart {
   }
 }
 
-export class PathDrawPart implements _DrawPart {
+export class PathDrawPart implements DrawPart {
   static readonly key: string = 'path';
-  parts: Array<_PathPart>;
+  parts: Array<PathPart>;
   paint: DrawPaint;
   autoClose: boolean;
 
-  constructor(paint: DrawPaint, parts: Array<_PathPart>, autoClose: boolean) {
+  constructor(paint: DrawPaint, parts: Array<PathPart>, autoClose: boolean) {
     this.paint = paint;
     this.parts = parts;
     this.autoClose = autoClose;
@@ -241,25 +241,25 @@ export class PathDrawPart implements _DrawPart {
 
   static fromMap(data: Map<string, ESObject>): PathDrawPart {
     const paint = DrawPaint.fromMap(data);
-    const parts: Array<_PathPart> = [];
+    const parts: Array<PathPart> = [];
     const list: Array<ESObject> = MapUtils.get<Array<ESObject>>(data, 'parts', []);
     for (let index = 0; index < list.length; index++) {
       const element: Map<string, ESObject> = list[index];
       let key: string = element.get('key');
       let value: Map<string, ESObject> = MapUtils.getMap(element, 'value');
-      let pathPart: _PathPart | null = null;
+      let pathPart: PathPart | null = null;
       switch (key) {
-        case _MovePathPart.key:
-          pathPart = _MovePathPart.fromMap(value);
+        case MovePathPart.key:
+          pathPart = MovePathPart.fromMap(value);
           break;
-        case _LineToPathPart.key:
-          pathPart = _LineToPathPart.fromMap(value);
+        case LineToPathPart.key:
+          pathPart = LineToPathPart.fromMap(value);
           break;
-        case _BezierPathPart.key:
-          pathPart = _BezierPathPart.fromMap(value);
+        case BezierPathPart.key:
+          pathPart = BezierPathPart.fromMap(value);
           break;
-        case _ArcToPathPart.key:
-          pathPart = _ArcToPathPart.fromMap(value);
+        case ArcToPathPart.key:
+          pathPart = ArcToPathPart.fromMap(value);
           break;
         default:
           break;
@@ -305,7 +305,7 @@ export class PathDrawPart implements _DrawPart {
   }
 }
 
-abstract class _PathPart {
+abstract class PathPart {
   abstract handle(path: drawing.Path): void;
 
   canIgnore(): boolean {
@@ -313,7 +313,7 @@ abstract class _PathPart {
   }
 }
 
-class _MovePathPart extends _PathPart {
+class MovePathPart extends PathPart {
   static readonly key: string = 'move';
   offset: Offset;
 
@@ -322,9 +322,9 @@ class _MovePathPart extends _PathPart {
     this.offset = offset;
   }
 
-  static fromMap(data: Map<string, ESObject>): _MovePathPart {
+  static fromMap(data: Map<string, ESObject>): MovePathPart {
     const offset = MapUtils.getOffset(MapUtils.getMap(data, 'offset'));
-    return new _MovePathPart(offset);
+    return new MovePathPart(offset);
   }
 
   handle(path: drawing.Path): void {
@@ -332,16 +332,16 @@ class _MovePathPart extends _PathPart {
   }
 }
 
-class _LineToPathPart extends _MovePathPart {
+class LineToPathPart extends MovePathPart {
   static readonly key: string = 'lineTo';
 
   constructor(offset: Offset) {
     super(offset);
   }
 
-  static fromMap(data: Map<string, ESObject>): _LineToPathPart {
+  static fromMap(data: Map<string, ESObject>): LineToPathPart {
     const offset = MapUtils.getOffset(MapUtils.getMap(data, 'offset'));
-    return new _LineToPathPart(offset);
+    return new LineToPathPart(offset);
   }
 
   handle(path: drawing.Path): void {
@@ -349,27 +349,27 @@ class _LineToPathPart extends _MovePathPart {
   }
 }
 
-class _BezierPathPart extends _PathPart {
+class BezierPathPart extends PathPart {
   static readonly key: string = 'bezier';
   control1: Offset;
   control2: Offset | null;
   target: Offset;
-  kind: number;
+ // kind: number;
 
-  constructor(control1: Offset, control2: Offset | null, target: Offset, kind: number) {
+  constructor(control1: Offset, control2: Offset | null, target: Offset) {
     super();
     this.control1 = control1;
     this.control2 = control2;
     this.target = target;
-    this.kind = kind;
+    //this.kind = kind;
   }
 
-  static fromMap(data: Map<string, ESObject>): _BezierPathPart {
+  static fromMap(data: Map<string, ESObject>): BezierPathPart {
     const control1 = MapUtils.getOffset(MapUtils.getMap(data, 'c1'));
     const control2 = data.get('c2') ? MapUtils.getOffset(MapUtils.getMap(data, 'c2')) : null;
     const target = MapUtils.getOffset(MapUtils.getMap(data, 'target'));
-    const kind = MapUtils.get(data, 'kind', 2);
-    return new _BezierPathPart(control1, control2, target, kind);
+    // const kind = MapUtils.get(data, 'kind', 2);
+    return new BezierPathPart(control1, control2, target);
   }
 
   handle(path: drawing.Path): void {
@@ -381,7 +381,7 @@ class _BezierPathPart extends _PathPart {
   }
 }
 
-class _ArcToPathPart extends _PathPart {
+class ArcToPathPart extends PathPart {
   static readonly key: string = 'arcTo';
   rect: common2D.Rect;
   startAngle: number;
@@ -396,12 +396,12 @@ class _ArcToPathPart extends _PathPart {
     this.useCenter = useCenter;
   }
 
-  static fromMap(data: Map<string, ESObject>): _ArcToPathPart {
+  static fromMap(data: Map<string, ESObject>): ArcToPathPart {
     const rect = MapUtils.getRect(MapUtils.getMap(data, 'rect'));
     const startAngle = MapUtils.get(data, 'start', 0);
     const sweepAngle = MapUtils.get(data, 'sweep', 0);
     const useCenter = MapUtils.get(data, 'useCenter', false);
-    return new _ArcToPathPart(rect, startAngle, sweepAngle, useCenter);
+    return new ArcToPathPart(rect, startAngle, sweepAngle, useCenter);
   }
 
   handle(path: drawing.Path): void {

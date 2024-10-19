@@ -36,15 +36,15 @@ export class AddTextOption implements EditOption {
 
 export class EditorText {
   text: string;
-  fontName: string;
+  fontName: string | null;
   x: number;
   y: number;
   size: number;
   color: common2D.Color;
-  fontFilePath: string;
+  fontFilePath: string | null;
 
-  constructor(text: string, fontName: string, x: number, y: number, size: number, color: common2D.Color,
-    fontFilePath: string) {
+  constructor(text: string, x: number, y: number, size: number, color: common2D.Color,
+    fontFilePath: string | null = null, fontName: string | null = null,) {
     this.text = text;
     this.fontName = fontName;
     this.x = x;
@@ -57,12 +57,12 @@ export class EditorText {
   static fromMap(data: Map<string, ESObject>): EditorText {
     return new EditorText(
       MapUtils.get(data, 'text', ''),
-      MapUtils.get(data, 'fontName', ''),
       MapUtils.get(data, 'x', 0),
       MapUtils.get(data, 'y', 0),
       MapUtils.get(data, 'size', 0),
       MapUtils.getColor(data),
-      MapUtils.get(data, 'fontFilePath', ''),
+      MapUtils.get(data, 'fontFilePath', null),
+      MapUtils.get(data, 'fontName', null),
     );
   }
 
@@ -81,8 +81,8 @@ export class EditorText {
     font.setSize(this.size);
     // TODO, 没有 api 设置自定义
     let typeface = new drawing.Typeface();
-    if (this.fontFilePath != undefined) {
-      typeface = drawing.Typeface.makeFromFile(this.fontFilePath);
+    if (this.fontFilePath != null) {
+      typeface = drawing.Typeface.makeFromFile(this.fontFilePath!);
     }
     // let familyName = typeface.getFamilyName();
     font.setTypeface(typeface);
