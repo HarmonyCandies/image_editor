@@ -1,7 +1,10 @@
 # image_editor
 
 Arkts plugin, Support crop, flip, rotate, color martix, mix image, add text. merge multi images.
+
 Arkts 插件，支持裁剪、翻转、旋转、颜色矩阵、混合图像、添加文本和合并多张图片。
+
+The tool api for  https://github.com/HarmonyCandies/image_cropper
 
 ## Support
 

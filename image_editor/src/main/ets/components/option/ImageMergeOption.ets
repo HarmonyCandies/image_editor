@@ -1,8 +1,7 @@
 import image from '@ohos.multimedia.image';
-import { Offset } from '../mode/Offset';
 import { MapUtils } from '../util/MapUtils';
 import { drawing } from '@kit.ArkGraphics2D';
-
+import { Offset } from '@kit.ArkUI';
 export class ImageMergeOption {
   image: PixelMap;
   offset: Offset;
