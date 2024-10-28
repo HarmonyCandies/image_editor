@@ -11,7 +11,7 @@
   "description": "Arkts plugin, Support crop, flip, rotate, mix image, add text. merge multi images.",
   "main": "Index.ets",
   "repository": "https://github.com/HarmonyCandies/image_editor",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "homepage": "https://github.com/HarmonyCandies/image_editor",
   "dependencies": {}
 }

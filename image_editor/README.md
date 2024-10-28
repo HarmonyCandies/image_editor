@@ -6,6 +6,10 @@ Arkts 插件，支持裁剪、翻转、旋转、颜色矩阵、混合图像、�
 
 The tool api for  https://github.com/HarmonyCandies/image_cropper
 
+## 安装
+
+`ohpm install @candies/image_editor`
+
 ## Support
 
 | Feature           | Support |
